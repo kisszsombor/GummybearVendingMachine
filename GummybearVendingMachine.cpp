@@ -7,8 +7,8 @@
 #include <hd44780.h>
 #include <hd44780ioClass/hd44780_I2Cexp.h> // include i/o class header
 
-#define LCD_TYPE_I2C_20_4 // 20x4 LCD with I2C module --> Zso
-//#define LCD_TYPE_I2C_16_2 // 16x2 LCD with I2C module --> Gyuri
+//#define LCD_TYPE_I2C_20_4 // 20x4 LCD with I2C module --> Zso
+#define LCD_TYPE_I2C_16_2 // 16x2 LCD with I2C module --> Gyuri
 
 /* CONFIGURATION */
 
@@ -49,10 +49,12 @@ Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS
 
 /* GLOBAL CONSTANTS / PARAMETERS */
 int GV_jelszo = 789;
-const long GC_interval = 12000; //  [ms] length of a round
-const int GC_NrOfRounds = 9; //  [db] number of rounds in a game, starts from 0, so 9 means 10
-const long GC_TiTextDispLong = 3000; // [ms] duration of text display nyertel/vege stb.
-const long GC_TiTextDispShort = 1500; // [ms] duration of text display nyertel/vege stb.
+long GC_interval = 12000; //  [ms] default length of a round
+const long GC_intervalReka = 12000; //  [ms] length of a round
+const long GC_intervalGabi = 7000; //  [ms] length of a round
+const int GC_NrOfRounds = 15; //  [db] number of rounds in a game, starts from 0, so 9 means 10
+const long GC_TiTextDispLong = 2000; // [ms] duration of text display nyertel/vege stb.
+const long GC_TiTextDispShort = 1000; // [ms] duration of text display nyertel/vege stb.
 
 
 /* GLOBAL VARIABLES */
@@ -315,13 +317,15 @@ void startGame(int selectedGame){
 void startRound(int selectedGame, int korSorszama){
 	// start rounds in an already active game
 
+	resetInputNumbers(); // reset pressed buttons
+
 	int rand1 = 0, rand2 = 0, result = 0, muvelet = 0;
 
 	switch (selectedGame) {
 		case 1:
 			// Reka - osszeadas
-			rand1 = random(2,8);
-			rand2 = random(2,7);
+			rand1 = random(2,7);
+			rand2 = random(2,6);
 			result = rand1 + rand2;
 			muvelet = 0; // osszeadas
 		break;
@@ -336,8 +340,8 @@ void startRound(int selectedGame, int korSorszama){
 
 		case 3:
 			// Gabi - szorzas
-			rand1 = random(2,10);
-			rand2 = random(2,10);
+			rand1 = random(4,10);
+			rand2 = random(4,10);
 			result = rand1 * rand2;
 			muvelet = 2; // szorzas
 		break;
@@ -450,8 +454,7 @@ void kiertekel(int megoldas, int tipp) {
 		lcd.setCursor(5, 1);
 		lcd.print("HELYES");
 
-		// reset pressed buttons
-		resetInputNumbers();
+		resetInputNumbers(); // reset pressed buttons
 
 		digitalWrite(zold, HIGH);
 		delay(GC_TiTextDispLong);
@@ -464,7 +467,7 @@ void kiertekel(int megoldas, int tipp) {
 			lcd.print("GRATULALOK,");
 			lcd.setCursor(0, 1);
 			lcd.print("NYERTEL!");
-			delay(GC_TiTextDispLong);
+			//delay(GC_TiTextDispLong);
 			//GV_stateContinueGame=false;
 			openDoor();
 			resetGame();
@@ -626,17 +629,23 @@ void toggleActiveGame(){
 		//toggle game number on start screen
 		if (GV_selectedGame == 1) {
 			GV_selectedGame = 2;
+			GC_interval = GC_intervalGabi;
 		}
 		else if (GV_selectedGame == 2) {
 			GV_selectedGame = 3;
+			GC_interval = GC_intervalGabi;
 		}
 		else if (GV_selectedGame == 3) {
 			GV_selectedGame = 4;
+			GC_interval = GC_intervalGabi;
 		}
 		else if (GV_selectedGame == 4) {
 			GV_selectedGame = 1;
+			GC_interval = GC_intervalReka;
 		}
-		else {GV_selectedGame = 1;}
+		else {
+			GV_selectedGame = 1;
+			GC_interval = GC_intervalReka;}
 
 		//display selected game
 		lcd.clear();
